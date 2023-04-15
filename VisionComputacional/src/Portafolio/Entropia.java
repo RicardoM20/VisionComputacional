@@ -2,66 +2,65 @@ package Portafolio;
 
 import java.awt.FileDialog;
 import java.awt.Frame;
-import java.awt.color.ColorSpace;
 import java.awt.image.BufferedImage;
-import java.awt.image.ColorConvertOp;
-import java.awt.image.ColorModel;
-import java.awt.image.Raster;
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.imageio.ImageIO;
-import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 
 public class Entropia {
-	public static double calcularEntropia(BufferedImage imagen) {
-        int ancho = imagen.getWidth();
-        int alto = imagen.getHeight();
-        double entropia = 0.0;
+	public static void main(String[] args) {
+		 // Crear un file dialog para seleccionar la imagen
+        Frame frame = new Frame();
+        FileDialog fileDialog = new FileDialog(frame, "Seleccionar imagen", FileDialog.LOAD);
+        fileDialog.setVisible(true);
 
-        // Obtener el histograma de intensidad de los píxeles de la imagen
-        ColorConvertOp operador = new java.awt.image.ColorConvertOp(
-        imagen.getColorModel().getColorSpace(), ColorSpace.getInstance(ColorSpace.CS_GRAY), null);
+        // Obtener la ruta de la imagen seleccionada
+        String imagePath = fileDialog.getDirectory() + fileDialog.getFile();
 
-        BufferedImage imagenGris = operador.filter(imagen, null);
-        Raster raster = imagenGris.getData();
-        int[] histograma = new int[256];
-        for (int y = 0; y < alto; y++) {
-            for (int x = 0; x < ancho; x++) {
-                histograma[raster.getSample(x, y, 0)]++;
-            }
+        // Leer la imagen
+        BufferedImage image = null;
+        try {
+            image = ImageIO.read(new File(imagePath));
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
-        // Calcular la distribución de probabilidades
-        double[] distribucion = new double[256];
-        for (int i = 0; i < 256; i++) {
-            distribucion[i] = (double) histograma[i] / (ancho * alto);
-        }
+        // Calcular la entropía de la imagen
+        double entropy = calculateEntropy(image);
 
-        // Calcular la entropía
-        for (int i = 0; i < 256; i++) {
-            if (distribucion[i] > 0) {
-                entropia -= distribucion[i] * (Math.log(distribucion[i]) / Math.log(2));
-            }
-        }
+        // Mostrar la entropía de la imagen
+        JOptionPane.showMessageDialog(null, "La entropía de la imagen seleccionada es: " + entropy);
 
-        return entropia;
     }
 
-	public static void main(String[] args) throws IOException {
-	    FileDialog fileDialog = new FileDialog((Frame)null, "Selecciona una imagen"); // crea un dialogo de selección de archivo
-	    fileDialog.setMode(FileDialog.LOAD); // establece el modo de dialogo para abrir archivo
-	    fileDialog.setVisible(true); // muestra el dialogo para seleccionar archivo
+    public static double calculateEntropy(BufferedImage image) {
+        int totalPixels = image.getWidth() * image.getHeight();
+        Map<Integer, Integer> pixelCounts = new HashMap<>();
 
-	    String directory = fileDialog.getDirectory(); // obtiene el directorio donde se encuentra el archivo
-	    String filename = fileDialog.getFile(); // obtiene el nombre del archivo seleccionado
+        // Contar el número de veces que aparece cada intensidad de pixel en la imagen
+        for (int i = 0; i < image.getWidth(); i++) {
+            for (int j = 0; j < image.getHeight(); j++) {
+                int pixel = image.getRGB(i, j);
+                int intensity = (pixel & 0xff) + ((pixel >> 8) & 0xff) + ((pixel >> 16) & 0xff);
+                if (pixelCounts.containsKey(intensity)) {
+                    pixelCounts.put(intensity, pixelCounts.get(intensity) + 1);
+                } else {
+                    pixelCounts.put(intensity, 1);
+                }
+            }
+        }
 
-	    if (directory != null && filename != null) { // si el usuario selecciona un archivo
-	        File selectedFile = new File(directory, filename); // crea un objeto File con el archivo seleccionado
-	        BufferedImage imagen = ImageIO.read(selectedFile); // lee la imagen seleccionada
-	        double entropia = calcularEntropia(imagen);
-	        System.out.println("Entropía de la imagen: " + entropia);
-	    }
+        // Calcular la entropía de la imagen utilizando la fórmula de entropía de la información
+        double entropy = 0;
+        for (int intensity : pixelCounts.keySet()) {
+            double probability = (double) pixelCounts.get(intensity) / totalPixels;
+            entropy -= probability * Math.log(probability) / Math.log(2);
+        }
+
+        return entropy;
 	}
-
 }

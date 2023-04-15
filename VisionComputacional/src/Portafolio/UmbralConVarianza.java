@@ -1,120 +1,96 @@
 package Portafolio;
+
 import java.awt.Color;
 import java.awt.FileDialog;
 import java.awt.Frame;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 
 import javax.imageio.ImageIO;
-import javax.swing.JFileChooser;
-import javax.swing.JFileChooser;
-import javax.swing.filechooser.FileNameExtensionFilter;
-import java.io.File;
-import java.io.IOException;
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-
 
 public class UmbralConVarianza {
-	public static void main(String[] args) throws IOException {
-		// Crea un FileDialog con filtro de extensiones para imágenes
-	    FileDialog fileDialog = new FileDialog((Frame)null, "Selecciona una imagen", FileDialog.LOAD);
-	    fileDialog.setFilenameFilter(new FilenameFilter() {
-	        @Override
-	        public boolean accept(File dir, String name) {
-	            return name.endsWith(".jpg") || name.endsWith(".jpeg") || name.endsWith(".png") || name.endsWith(".gif");
-	        }
-	    });
+    public static void main(String[] args) {
+        try {
+        	// Crear un FileDialog para que el usuario seleccione la imagen
+            FileDialog fileDialog = new FileDialog(new Frame(), "Seleccionar imagen");
+            fileDialog.setFile("*.jpg;*.jpeg;*.png;*.bmp");
+            fileDialog.setVisible(true);
+            String filename = fileDialog.getFile();
+            if (filename == null) {
+                return;
+            }
+            String directory = fileDialog.getDirectory();
+            File file = new File(directory + filename);
 
-	    // Muestra el diálogo para que el usuario seleccione un archivo
-	    fileDialog.setVisible(true);
-	    File selectedFile = new File(fileDialog.getDirectory(), fileDialog.getFile());
+            // Cargar la imagen desde el archivo
+            BufferedImage image = ImageIO.read(file);
 
-	 // Si el usuario seleccionó un archivo, lee la imagen y aplica el umbral
-	    if (selectedFile.exists()) {
-	        BufferedImage image = ImageIO.read(selectedFile);
-	        BufferedImage thresholdedImage = varianzaThreshold(image);
+            // Obtener el umbral óptimo
+            int threshold = UmbralConVarianza.calculateThreshold(image);
 
-	        // Muestra un diálogo de archivo para que el usuario seleccione dónde guardar el archivo resultante
-	        FileDialog saveDialog = new FileDialog((Frame) null, "Guardar imagen como", FileDialog.SAVE);
-	        saveDialog.setFile("umbral.png");
-	        saveDialog.setVisible(true);
-	        String saveFilePath = saveDialog.getDirectory() + saveDialog.getFile();
+            // Imprimir el umbral óptimo
+            System.out.println("Umbral óptimo: " + threshold);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
-	        // Guarda el resultado en el archivo seleccionado por el usuario
-	        File outputFile = new File(saveFilePath);
-	        ImageIO.write(thresholdedImage, "png", outputFile);
-	    }
-	}
-		
-		public static BufferedImage varianzaThreshold(BufferedImage image) {
-		    int width = image.getWidth();
-		    int height = image.getHeight();
+    public static int calculateThreshold(BufferedImage image) {
+        // Calcular la media de la imagen
+        int mean = 0;
+        for (int y = 0; y < image.getHeight(); y++) {
+            for (int x = 0; x < image.getWidth(); x++) {
+                mean += new Color(image.getRGB(x, y)).getRed();
+            }
+        }
+        mean /= image.getWidth() * image.getHeight();
 
-		    BufferedImage thresholdedImage = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_BINARY);
+        // Calcular la varianza global de la imagen
+        double variance = 0;
+        for (int y = 0; y < image.getHeight(); y++) {
+            for (int x = 0; x < image.getWidth(); x++) {
+                int value = new Color(image.getRGB(x, y)).getRed();
+                variance += Math.pow((value - mean), 2);
+            }
+        }
+        variance /= image.getWidth() * image.getHeight();
 
-		    int[][] grayMatrix = new int[height][width];
-		    int[] histogram = new int[256];
-
-		    // Pasa la imagen a escala de grises y calcula el histograma
-		    for (int y = 0; y < height; y++) {
-		        for (int x = 0; x < width; x++) {
-		            Color color = new Color(image.getRGB(x, y));
-		            int gray = (int) (0.2989 * color.getRed() + 0.5870 * color.getGreen() + 0.1140 * color.getBlue());
-		            grayMatrix[y][x] = gray;
-		            histogram[gray]++;
-		        }
-		    }
-
-		    // Calcula el umbral basado en las varianzas de los dos grupos
-		    int threshold = 0;
-		    double maxBetweenClassVar = 0.0;
-		    double w1 = 0.0;
-		    double w2 = 0.0;
-		    double mean1 = 0.0;
-		    double mean2 = 0.0;
-		    double variance1 = 0.0;
-		    double variance2 = 0.0;
-		    for (int i = 0; i < 256; i++) {
-		        w1 += histogram[i];
-		        if (w1 == 0) {
-		            continue;
-		        }
-
-		        w2 = width * height - w1;
-		        if (w2 == 0) {
-		            break;
-		        }
-
-		        mean1 = (mean1 * (w1 - histogram[i]) + i * histogram[i]) / w1;
-		        mean2 = (mean2 * (w2 + histogram[i]) - i * histogram[i]) / w2;
-		        variance1 = variance1 * (w1 - histogram[i]) + (i - mean1) * (i - mean1) * histogram[i];
-		        variance1 /= w1;
-		        variance2 = variance2 * (w2 + histogram[i]) + (i - mean2) * (i - mean2) * histogram[i];
-		        variance2 /= w2;
-
-		        double betweenClassVar = w1 * w2 * Math.pow((mean1 - mean2), 2) / Math.pow(width * height, 2);
-		        if (betweenClassVar > maxBetweenClassVar) {
-		            maxBetweenClassVar = betweenClassVar;
-		            threshold = i;
-		        }
-		    }
-
-		    // Aplica el umbral a la imagen
-		    for (int y = 0; y < height; y++) {
-		        for (int x = 0; x < width; x++) {
-		            if (grayMatrix[y][x] > threshold) {
-		                thresholdedImage.setRGB(x, y, Color.WHITE.getRGB());
-		            } else {
-		                thresholdedImage.setRGB(x, y, Color.BLACK.getRGB());
-		            }
-		        }
-		    }
-
-		    return thresholdedImage;
-		}
-		
-	}
-
+     // Calcular el umbral óptimo
+        int threshold = 0;
+        double maxVariance = Double.MIN_VALUE;
+        for (int t = 0; t < 256; t++) {
+            // Dividir la imagen en dos regiones
+            int count1 = 0;
+            int sum1 = 0;
+            int count2 = 0;
+            int sum2 = 0;
+            for (int y = 0; y < image.getHeight(); y++) {
+                for (int x = 0; x < image.getWidth(); x++) {
+                    int value = new Color(image.getRGB(x, y)).getRed();
+                    if (value <= t) {
+                        count1++;
+                        sum1 += value;
+                    } else {
+                        count2++;
+                        sum2 += value;
+                    }
+                }
+            }
+            if (count1 == 0 || count2 == 0) {
+                continue;
+            }
+            // Calcular la varianza entre las dos regiones
+            double varianceBetween = ((count1 * Math.pow((sum1 / count1) - mean, 2)) 
+                                    + (count2 * Math.pow((sum2 / count2) - mean, 2))) 
+                                    / (count1 + count2);
+            // Actualizar el umbral óptimo si la varianza es mayor
+            if (varianceBetween > maxVariance) {
+                maxVariance = varianceBetween;
+                threshold = t;
+            }
+        }
+        // Devolver el umbral óptimo
+        return threshold;
+        }
+    }
