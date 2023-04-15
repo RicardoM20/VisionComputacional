@@ -1,5 +1,7 @@
 package Portafolio;
 
+import java.awt.FileDialog;
+import java.awt.Frame;
 import java.awt.color.ColorSpace;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorConvertOp;
@@ -46,16 +48,20 @@ public class Entropia {
         return entropia;
     }
 
-    public static void main(String[] args) throws IOException {
-    	JFileChooser fileChooser = new JFileChooser(); // crea un file chooser
-    	fileChooser.setCurrentDirectory(new File(System.getProperty("user.home"))); // establece el directorio inicial
-    	int result = fileChooser.showOpenDialog(null); // muestra el dialogo para abrir archivo
+	public static void main(String[] args) throws IOException {
+	    FileDialog fileDialog = new FileDialog((Frame)null, "Selecciona una imagen"); // crea un dialogo de selección de archivo
+	    fileDialog.setMode(FileDialog.LOAD); // establece el modo de dialogo para abrir archivo
+	    fileDialog.setVisible(true); // muestra el dialogo para seleccionar archivo
 
-    	if (result == JFileChooser.APPROVE_OPTION) { // si el usuario selecciona un archivo
-    	    File selectedFile = fileChooser.getSelectedFile(); // obtiene el archivo seleccionado
-    	    BufferedImage imagen = ImageIO.read(selectedFile); // lee la imagen seleccionada
-    	    double entropia = calcularEntropia(imagen);
-    	    System.out.println("Entropía de la imagen: " + entropia);
-    	}
-    }
+	    String directory = fileDialog.getDirectory(); // obtiene el directorio donde se encuentra el archivo
+	    String filename = fileDialog.getFile(); // obtiene el nombre del archivo seleccionado
+
+	    if (directory != null && filename != null) { // si el usuario selecciona un archivo
+	        File selectedFile = new File(directory, filename); // crea un objeto File con el archivo seleccionado
+	        BufferedImage imagen = ImageIO.read(selectedFile); // lee la imagen seleccionada
+	        double entropia = calcularEntropia(imagen);
+	        System.out.println("Entropía de la imagen: " + entropia);
+	    }
+	}
+
 }

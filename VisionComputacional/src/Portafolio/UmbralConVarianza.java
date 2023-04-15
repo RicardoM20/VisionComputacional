@@ -1,7 +1,10 @@
 package Portafolio;
 import java.awt.Color;
+import java.awt.FileDialog;
+import java.awt.Frame;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 
 import javax.imageio.ImageIO;
@@ -16,23 +19,34 @@ import java.awt.image.BufferedImage;
 
 public class UmbralConVarianza {
 	public static void main(String[] args) throws IOException {
-		// Crea un JFileChooser con filtro de extensiones para imágenes
-		JFileChooser fileChooser = new JFileChooser();
-		FileNameExtensionFilter filter = new FileNameExtensionFilter("Imágenes", "jpg", "jpeg", "png", "gif");
-		fileChooser.setFileFilter(filter);
+		// Crea un FileDialog con filtro de extensiones para imágenes
+	    FileDialog fileDialog = new FileDialog((Frame)null, "Selecciona una imagen", FileDialog.LOAD);
+	    fileDialog.setFilenameFilter(new FilenameFilter() {
+	        @Override
+	        public boolean accept(File dir, String name) {
+	            return name.endsWith(".jpg") || name.endsWith(".jpeg") || name.endsWith(".png") || name.endsWith(".gif");
+	        }
+	    });
 
-		// Muestra el diálogo para que el usuario seleccione un archivo
-		int result = fileChooser.showOpenDialog(null);
+	    // Muestra el diálogo para que el usuario seleccione un archivo
+	    fileDialog.setVisible(true);
+	    File selectedFile = new File(fileDialog.getDirectory(), fileDialog.getFile());
 
-		// Si el usuario seleccionó un archivo, lee la imagen y aplica el umbral
-		if (result == JFileChooser.APPROVE_OPTION) {
-		    File selectedFile = fileChooser.getSelectedFile();
-		    BufferedImage image = ImageIO.read(selectedFile);
-		    BufferedImage thresholdedImage = varianzaThreshold(image);
-		    // Guarda el resultado en un archivo
-		    File outputFile = new File("umbral.png");
-		    ImageIO.write(thresholdedImage, "png", outputFile);
-		}
+	 // Si el usuario seleccionó un archivo, lee la imagen y aplica el umbral
+	    if (selectedFile.exists()) {
+	        BufferedImage image = ImageIO.read(selectedFile);
+	        BufferedImage thresholdedImage = varianzaThreshold(image);
+
+	        // Muestra un diálogo de archivo para que el usuario seleccione dónde guardar el archivo resultante
+	        FileDialog saveDialog = new FileDialog((Frame) null, "Guardar imagen como", FileDialog.SAVE);
+	        saveDialog.setFile("umbral.png");
+	        saveDialog.setVisible(true);
+	        String saveFilePath = saveDialog.getDirectory() + saveDialog.getFile();
+
+	        // Guarda el resultado en el archivo seleccionado por el usuario
+	        File outputFile = new File(saveFilePath);
+	        ImageIO.write(thresholdedImage, "png", outputFile);
+	    }
 	}
 		
 		public static BufferedImage varianzaThreshold(BufferedImage image) {

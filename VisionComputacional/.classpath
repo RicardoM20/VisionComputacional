@@ -9,7 +9,12 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/ApacheCommonCollections"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/ApacheCommonCSV"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/ApacheCommonsIO"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/openCV"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/openCV">
+		<attributes>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="C:/Users/dattd/OneDrive/Documentos/opencv/build/java"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Weka"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Opencv"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

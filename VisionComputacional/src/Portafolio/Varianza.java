@@ -1,4 +1,6 @@
 package Portafolio;
+import java.awt.FileDialog;
+import java.awt.Frame;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import javax.imageio.ImageIO;
@@ -27,32 +29,32 @@ public class Varianza {
         return sum / (count - 1);
     }
 
-    public static void main(String[] args) {
-    	// Configuración de la caja de diálogo de selección de archivo
-        JFileChooser fileChooser = new JFileChooser();
-        FileNameExtensionFilter filter = new FileNameExtensionFilter("Archivos de imagen", "jpg", "png");
-        fileChooser.setFileFilter(filter);
+	public static void main(String[] args) {
+	    // Configuración de la caja de diálogo de selección de archivo
+	    FileDialog fileDialog = new FileDialog(new Frame(), "Seleccionar archivo", FileDialog.LOAD);
+	    fileDialog.setFilenameFilter((dir, name) -> name.endsWith(".jpg") || name.endsWith(".png"));
 
-        // Mostrar la caja de diálogo de selección de archivo
-        int result = fileChooser.showOpenDialog(null);
+	    // Mostrar la caja de diálogo de selección de archivo
+	    fileDialog.setVisible(true);
 
-        if (result == JFileChooser.APPROVE_OPTION) {
-            // El usuario ha seleccionado un archivo
-            File file = fileChooser.getSelectedFile();
+	    if (fileDialog.getFile() != null) {
+	        // El usuario ha seleccionado un archivo
+	        File file = new File(fileDialog.getDirectory(), fileDialog.getFile());
 
-            try {
-                // Cargar la imagen desde el archivo
-                BufferedImage image = ImageIO.read(file);
+	        try {
+	            // Cargar la imagen desde el archivo
+	            BufferedImage image = ImageIO.read(file);
 
-                // Calcular la varianza de la intensidad de grises de la imagen
-                double variance = calculate(image);
+	            // Calcular la varianza de la intensidad de grises de la imagen
+	            double variance = calculate(image);
 
-                // Imprimir el resultado
-                System.out.println("La varianza de la imagen es: " + variance);
-            } catch (Exception e) {
-                System.out.println("Error al cargar la imagen: " + e.getMessage());
-            }
-    }
-    }
+	            // Imprimir el resultado
+	            System.out.println("La varianza de la imagen es: " + variance);
+	        } catch (Exception e) {
+	            System.out.println("Error al cargar la imagen: " + e.getMessage());
+	        }
+	    }
+	}
+
 }	
 
